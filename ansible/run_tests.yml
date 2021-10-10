@@ -1,0 +1,6 @@
+# run on all hosts
+- hosts: all
+  tasks:
+
+  - name: test game outcome
+    command: sh ~/danielb-project0/test_player1_win.sh

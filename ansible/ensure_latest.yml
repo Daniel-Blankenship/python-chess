@@ -1,0 +1,18 @@
+# run on all hosts
+- hosts: all
+  tasks:
+
+  - name: install python3
+    package:
+      name: python3
+      state: latest
+    
+  - name: install python3-venv
+    package:
+      name: python3-venv
+      state: latest
+    
+  - name: install git
+    package:
+      name: git
+      state: latest

@@ -1,0 +1,104 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+strategy:
+  matrix:
+    Python36:
+      python.version: '3.6'
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '$(python.version)'
+  displayName: 'Use Python $(python.version)'
+
+- script: |
+    python -m pip install --upgrade pip
+    python -m venv venv
+    venv/bin/python -m pip install -r requirements.txt
+  displayName: 'Install dependencies'
+
+
+
+# in azure devops, instead of having to type usernames and password
+# in this file, you create (in the GUI) an objct called
+# "service connection" to encapsulate those credentials separate from
+# any one pipeline. then in the pipeline, you refer to the service
+# connection by name in tasks that will use them.
+
+- task: SonarCloudPrepare@1
+  inputs:
+    SonarCloud: 'SonarCloudDanielBlankenshipP0'
+    organization: '2105-may24-devops'
+    scannerMode: 'CLI'
+    configMode: 'manual'
+    cliProjectKey: '2105-may24-devops_danielb-project0'
+    cliSources: '.'
+
+- task: SonarCloudAnalyze@1
+
+# publishing the "quality gate" result to the build run in azure pipelines
+- task: SonarCloudPublish@1
+  inputs:
+    pollingTimeoutSec: '300'
+
+# MSYS_NO_PATHCONV=1 docker run \
+#     --rm \
+#     -e SONAR_HOST_URL="https://sonarcloud.io" \
+#     -e SONAR_LOGIN="myToken" \
+#     -v "$(pwd):/usr/src" \
+#     sonarsource/sonar-scanner-cli \
+#     -Dsonar.projectKey="2105-may24-devops_danielb-project0" \
+#     -Dsonar.organization="2105-may24-devops"
+
+
+- task: InstallSSHKey@0
+  inputs:
+    knownHostsEntry: |
+      13.65.42.214 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILDgDBa8J9ies31MG1xpL7gSESrLxC5PWpsAWpiTWpVn
+      13.65.42.214 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC/ZtHziWx6ZXblZRAG5VBYoE4Lx6pF7ZBvHJ6vq5txfKp5GZXbAmb1pjJyccLsguJRr9QNKgMfOQm3Zh3jmzToN/PQ+hXYLRZvlWXGmNPl7xds8hcp6EG1ZQmNsXseoPXymzc/rWgm2XmlKuseElTlmvOgMHDo8xS27z8/Ba8v50GQnXO1uQJa5kHHIfxOrd4kGHYb/p9CjPmdO+J4NAWOFkB/T1+Ht04n4UHlFXQrRkSvxxRVAKRgFP4vKBxySAR1IDeV/AZ8gE2r7bsPZI/l4RcyODkh9jW0z3N+huk/8lbpEvzQUhZmV/E5psI1Eyu/ax5goG28cK6VYot3/Dpr
+      13.65.42.214 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBLP9SkKMe2QK5e4IzLNCvQtDJ06ofyC7rbGHbU6/pye2c+Db+YxnKoMmQVLYIU6F416jFrXbq9IRbcpZXygywc8=
+      104.215.72.107 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJk+a+SRoJjBsnplbbE6vG/9O6jJ/LsdBjK0K7A7FfOI
+      104.215.72.107 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD0f57lrkvEQNK1ftlYNYadgJ2Clq866W/RIr76ybA8NxHXGJmjL5kTGr2lS/K65V5y5w01Ya/wCiSkSEW1SOgnHo7N8MmrkuOTixJgb1PicJ56wB8e88knXUT/r222V/FCvsPARQZBsMU4d44dWb7giEDiiYv7fwKISY3GGpS6K0Hlwvi/q4JDusISJO5UWZ/lqLfGxeTjyEho6RnczCBauAuG8U1JQ8daGTLWmLv6c3qTSoJQ9K1SQuwQh8FD49BL1yjslrnGihCZXej/fM+rmipMrHy0nHzh6uUWF7RKWHajlCByy964+dMLt/fMaOxMGmn8XhVgkKK2+9/Dx4jR
+      104.215.72.107 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBBol0BBG7Ah1dEgciEgRkqJ3tnLSOPHGKJtPlhM1yeiQAl3I4OIhTvY+EzMUS4hz/TppuiG6iHxlaU1D814MWC4=
+      20.97.12.217 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDN4l2Jv2Krgw9EN21HHWfXGAoHZx/zHX5C0Iq9Ov/UU
+      20.97.12.217 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+OrY0VO+gD8eFk3wmVBY9McSOniH83A0mEM6kHeYQMpKNKbuar/DVBjkgz1sgfmrWLHZOPhDno96Av+1M6cPmKTEMsjWSaepPDCHxlO82RTR72h1zMy8UwimI5+AFCbehprRymLT3WJoTo2lgnQO0ZA6sCrwYhgnJVY1Yereb1lBmaS5vBJ4OVVb1l1VAdGnYVhYT44dfsEnlcFpjF4JAtH3RNUrGAJ89g9KXSSlv/6UshB+VAJ2M5kmvH/JReOuMIxnBGa/JYNCqYuUj4dj+EYYFszlpfwcHoSlUD7Laqc0yNQHSge0zVbdy/aeFxY0M/8jlF/1AU8bywBOGuWlx
+      20.97.12.217 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFAZU4nQNS6lNWqiFzoQ4pjTSmsGyxWmyoZS7pzSWooaua/yV9JDou49KuhCzZakpP/PY0WfTxbo/KrZM+ESW+Q=
+      13.84.166.27 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINaFd/osyfNlVttxEeG0MTSwwJsK++s1E7q3wJpcKst5
+      13.84.166.27 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDLzZIAA7oqZlnHt9uY/Yk5aEY+m1o3Zuufdrd414Kar8bGeIGmy66ybawzsk+fR4N/8hfP0SsS4Bvb5IfF6i2kca5PJTpq4PM8W2grhmFpClnAUPv79Uq1tVljzI2q/KsKEEUrmAY9UlMr3bQTN6Sx2DoJutx1L91qvI5L9mCrs18y0SsCmw7gdUgejVD/T4o+DGE/vx3oc9h6iblUajQN/OQ11r2iCERXRRMDufXYKZuNQTwqjNQxwFPXABpiZXD0ryYAPADw7bawpEq14lPbsqgmM6XAqbj52RMjP73sCzRDk7Ecp0hwJMNg+l/+vVN5ph/WDCCp//kJPNZ8lBXP
+      13.84.166.27 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBD/ijCrZ+LcL4gEv5Y0K7/h1/QNY85jbQGXZK6SNKSAIaO2HlZsirragLXPLeZrIHWqj8idSCGf8uaU16D1xwy4=
+      13.66.8.112 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPjy7rU3xXGsITizQ4anwpuB4eqyo6o914F/jklV1az5
+      13.66.8.112 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDjFAGX6TQ7ohidiP51piTRkWdEHnZVJ59vgF9BREt1IsVYxq/jJdRN7V2Wzpr2LN6XnyVFQvth+1PBIqZph4YkKKnjhY3U6NV6v1leWh1hURmz5D/6GFvjt51Hxkhj/NcazeCM50h0ehKWqKBtP24iYhoHxmCey8v90MEYYT64EQfv2FlvCQk4wr1ozH7dYXk5GwJkYjtnHNHSFPOZ9ZK6Z9TqiAoRtLcsTyAzoqwsWStaaLYmYMK9OvJQjgTSKLB9CbIXXTmL+FVsI40Y5nYR07CI2+Eh6qCEngGXzOUOfFzo9ICwAUgsfTCv0iOuT9PwH8jgymmsLQ5rryX71k77
+      13.66.8.112 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBB8uiPgYsAfhZo9tzfam2hbv7G1TUF4hk0jzrxO/SjLO2qBpMrlDaQvQWYZI3kdNT1xgFHFKSXcyaPElszq3tqU=
+    sshKeySecureFile: '2105-may24-devops-ubuntu-vm-1_key.pem'
+
+- task: Ansible@0
+  inputs:
+    ansibleInterface: 'agentMachine'
+    playbookPathOnAgentMachine: './ansible/ensure_latest.yml'
+    inventoriesAgentMachine: 'file'
+    inventoryFileOnAgentMachine: './ansible/inventory'
+  displayName: 'Ansible ensure latest'
+
+- task: Ansible@0
+  inputs:
+    ansibleInterface: 'agentMachine'
+    playbookPathOnAgentMachine: './ansible/setup_chess.yml'
+    inventoriesAgentMachine: 'file'
+    inventoryFileOnAgentMachine: './ansible/inventory'
+  displayName: 'Ansible setup chess'
+
+- task: Ansible@0
+  inputs:
+    ansibleInterface: 'agentMachine'
+    playbookPathOnAgentMachine: './ansible/run_tests.yml'
+    inventoriesAgentMachine: 'file'
+    inventoryFileOnAgentMachine: './ansible/inventory'
+  displayName: 'Ansible run tests'

@@ -1,0 +1,15 @@
+# run on all hosts
+- hosts: all
+  tasks:
+
+  - name: clone git
+    ansible.builtin.git:
+      repo: https://github.com/2105-may24-devops/danielb-project0.git
+      dest: ~/danielb-project0
+
+  - name: setup venv and install requirements
+    pip:
+      requirements: ~/danielb-project0/requirements.txt
+      virtualenv: ~/venv
+      virtualenv_command: /usr/bin/python3 -m venv venv
+      #virtualenv_python: python3.6.9
